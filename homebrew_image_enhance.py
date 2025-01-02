@@ -19,7 +19,7 @@ def CLAHE(img):                                                  # 自适应直�
     img_v = img_hsv[:,:,2]
     mean, std_dev = cv2.meanStdDev(img_gray)
     clip_limit = float(std_dev ** 2 / (mean * 2))
-    print(clip_limit)                                           # cliplimit现在可自适应获得
+    # print(clip_limit)                                           # cliplimit现在可自适应获得
     clahe = cv2.createCLAHE(clipLimit = clip_limit, tileGridSize = (15, 15))
     img_v = clahe.apply(img_v)
     img_hsv_enhanced = cv2.merge([img_h, img_s, img_v])
@@ -63,22 +63,23 @@ def WAVELET_DENOISE(img):                                       # 将图像小�
         channel = pywt.idwt2((cA, (cH, cV, cD)), 'haar')
         reform_channels.append(channel/np.max(channel) * 255)
 
-    img_reformed = cv2.merge(reform_channels)
+    img_reformed = cv2.merge(reform_channels).astype(np.uint8)
     return img_reformed
 
 
-path = 'C:/Users/29560/Desktop/lucitic/'
-save_path = 'C:/Users/29560/Desktop/huh/'
+path = r'C:/Users/29560/Desktop/lucitic/'
+save_path = r'C:/Users/29560/Desktop/oi/'
 
 file_list = os.scandir(path)
 for imgs in file_list:
     img = cv2.imread(os.path.join(path, imgs.name))
 
-    img = AGAMMA(img)
+    img_gammaed_1 = AGAMMA(img)
     img_clahed = CLAHE(img)
-    img_gammaed = AGAMMA(img)
-    img = cv2.addWeighted(img_clahed, 0.5, img_gammaed, 0.5, 0)
-    img = WAVELET_DENOISE(img)
+    img_denoised = WAVELET_DENOISE(img_clahed)
+    img_gammaed_2 = AGAMMA(img_denoised)
+    img = cv2.addWeighted(img_gammaed_1, 0.5, img_gammaed_2, 0.5, 0)
+    img = AGAMMA(img)
 
     cv2.imwrite(os.path.join(save_path, imgs.name), img)
     print(imgs.name)
